@@ -1,0 +1,237 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client"
+    output   = "../../generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+    // url      = env("DATABASE_URL")
+}
+
+enum Role {
+    CUSTOMER
+    SELLER
+    ADMIN
+}
+
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    SHIPPED
+    DELIVERED
+    CANCELLED
+}
+
+// model User {
+//     id        String  @id @default(uuid())
+//     name      String
+//     email     String  @unique
+//     password  String
+//     role      Role    @default(CUSTOMER)
+//     isBanned  Boolean @default(false)
+//     isDeleted Boolean @default(false)
+
+//     medicines Medicine[] @relation("SellerMedicines")
+//     orders    Order[]    @relation("CustomerOrders")
+//     reviews   Review[]
+
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+
+//     @@index([role, email])
+// }
+
+model Category {
+    id          String  @id @default(uuid())
+    name        String  @unique
+    description String?
+
+    medicines Medicine[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Medicine {
+    id           String  @id @default(uuid())
+    name         String
+    description  String
+    price        Float
+    stock        Int
+    manufacturer String
+    imageUrl     String?
+    isDeleted    Boolean @default(false)
+
+    sellerId String
+    // seller   User   @relation("SellerMedicines", fields: [sellerId], references: [id])
+
+    categoryId String
+    category   Category @relation(fields: [categoryId], references: [id])
+
+    orderItems OrderItem[]
+    reviews    Review[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([sellerId, categoryId, price, name])
+}
+
+model Order {
+    id         String @id @default(uuid())
+    customerId String
+    // customer   User   @relation("CustomerOrders", fields: [customerId], references: [id])
+
+    status          OrderStatus @default(PENDING)
+    totalAmount     Float
+    shippingAddress String
+    paymentMethod   String      @default("Cash on Delivery")
+
+    items OrderItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([customerId, status, createdAt])
+}
+
+model OrderItem {
+    id String @id @default(uuid())
+
+    orderId String
+    order   Order  @relation(fields: [orderId], references: [id])
+
+    medicineId String
+    medicine   Medicine @relation(fields: [medicineId], references: [id])
+
+    quantity Int
+    price    Float
+
+    createdAt DateTime @default(now())
+
+    @@index([orderId, medicineId])
+}
+
+model Review {
+    id String @id @default(uuid())
+
+    rating  Int
+    comment String?
+
+    // userId String
+    // user   User   @relation(fields: [userId], references: [id])
+
+    medicineId String
+    medicine   Medicine @relation(fields: [medicineId], references: [id])
+
+    createdAt DateTime @default(now())
+
+    @@index([medicineId])
+}
+
+
+// generator client {
+//   provider = "prisma-client-js"
+//   output   = "../generated/prisma"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+// }
+
+// // Enums
+// enum Role {
+//   CUSTOMER
+//   SELLER
+//   ADMIN
+// }
+
+// enum OrderStatus {
+//   PENDING
+//   CONFIRMED
+//   SHIPPED
+//   DELIVERED
+//   CANCELLED
+// }
+
+// // Models
+// model Category {
+//   id          String   @id @default(uuid())
+//   name        String   @unique
+//   description String?
+//   medicines   Medicine[]
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model Medicine {
+//   id           String     @id @default(uuid())
+//   name         String
+//   description  String
+//   price        Float
+//   stock        Int
+//   manufacturer String
+//   imageUrl     String?
+//   isDeleted    Boolean    @default(false)
+
+//   sellerId    String
+//   categoryId  String
+//   category    Category   @relation(fields: [categoryId], references: [id])
+
+//   orderItems  OrderItem[]
+//   reviews     Review[]
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@index([sellerId, categoryId, price, name])
+// }
+
+// model Order {
+//   id              String      @id @default(uuid())
+//   customerId      String
+//   status          OrderStatus @default(PENDING)
+//   totalAmount     Float
+//   shippingAddress String
+//   paymentMethod   String      @default("Cash on Delivery")
+
+//   items OrderItem[]
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@index([customerId, status, createdAt])
+// }
+
+// model OrderItem {
+//   id         String   @id @default(uuid())
+//   orderId    String
+//   order      Order    @relation(fields: [orderId], references: [id])
+//   medicineId String
+//   medicine   Medicine @relation(fields: [medicineId], references: [id])
+//   quantity   Int
+//   price      Float
+
+//   createdAt DateTime @default(now())
+
+//   @@index([orderId, medicineId])
+// }
+
+// model Review {
+//   id         String   @id @default(uuid())
+//   rating     Int
+//   comment    String?
+//   medicineId String
+//   medicine   Medicine @relation(fields: [medicineId], references: [id])
+
+//   createdAt DateTime @default(now())
+
+//   @@index([medicineId])
+// }
