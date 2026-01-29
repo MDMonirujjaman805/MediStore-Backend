@@ -1,5 +1,9 @@
-import express, { Application } from "express";
 import cors from "cors";
+import { auth } from "./lib/auth";
+import express, { Application } from "express";
+import { shopRouter } from "./shop/shop.route";
+import { toNodeHandler } from "better-auth/node";
+import { orderRouter } from "./orders/order.route";
 
 const app: Application = express();
 
@@ -10,13 +14,17 @@ app.use(
   }),
 );
 
+app.all("/api/auth/*splat", toNodeHandler(auth));
+
 app.use(express.json());
+
+app.use("/api/v1/orders", orderRouter.router);
+app.use("/api/v1/shop", shopRouter.router);
 
 app.get("/", (req, res) => {
   res.send("Hello World! This is MediStore Website.");
 });
 
-// Fallback 404 (Express 5 safe)
 app.use((req, res) => {
   res.status(404).json({
     success: false,

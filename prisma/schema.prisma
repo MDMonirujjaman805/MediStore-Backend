@@ -5,27 +5,29 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-    provider = "prisma-client"
-    output   = "../../generated/prisma"
+  provider = "prisma-client"
+  // provider = "prisma-client-js"
+  // output   = "../../generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-    // url      = env("DATABASE_URL")
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
 }
 
 enum Role {
-    CUSTOMER
-    SELLER
-    ADMIN
+  CUSTOMER
+  SELLER
+  ADMIN
 }
 
 enum OrderStatus {
-    PENDING
-    CONFIRMED
-    SHIPPED
-    DELIVERED
-    CANCELLED
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }
 
 // model User {
@@ -47,191 +49,162 @@ enum OrderStatus {
 //     @@index([role, email])
 // }
 
+model User {
+  id            String  @id @default(uuid())
+  name          String
+  email         String
+  emailVerified Boolean @default(false)
+  password      String?
+  role          Role    @default(CUSTOMER)
+  isBanned      Boolean @default(false)
+  isDeleted     Boolean @default(false)
+
+  medicines Medicine[] @relation("SellerMedicines")
+  orders    Order[]    @relation("CustomerOrders")
+  reviews   Review[]
+  image     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  sessions  Session[]
+  accounts  Account[]
+
+  @@unique([email])
+  @@index([role, email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
 model Category {
-    id          String  @id @default(uuid())
-    name        String  @unique
-    description String?
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
 
-    medicines Medicine[]
+  medicines Medicine[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Medicine {
-    id           String  @id @default(uuid())
-    name         String
-    description  String
-    price        Float
-    stock        Int
-    manufacturer String
-    imageUrl     String?
-    isDeleted    Boolean @default(false)
+  id           String  @id @default(uuid())
+  name         String
+  description  String
+  price        Float
+  stock        Int
+  manufacturer String
+  imageUrl     String?
+  isDeleted    Boolean @default(false)
 
-    sellerId String
-    // seller   User   @relation("SellerMedicines", fields: [sellerId], references: [id])
+  sellerId String
+  seller   User   @relation("SellerMedicines", fields: [sellerId], references: [id])
 
-    categoryId String
-    category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
-    orderItems OrderItem[]
-    reviews    Review[]
+  orderItems OrderItem[]
+  reviews    Review[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@index([sellerId, categoryId, price, name])
+  @@index([sellerId, categoryId, price, name])
 }
 
 model Order {
-    id         String @id @default(uuid())
-    customerId String
-    // customer   User   @relation("CustomerOrders", fields: [customerId], references: [id])
+  id         String @id @default(uuid())
+  customerId String
+  customer   User   @relation("CustomerOrders", fields: [customerId], references: [id])
 
-    status          OrderStatus @default(PENDING)
-    totalAmount     Float
-    shippingAddress String
-    paymentMethod   String      @default("Cash on Delivery")
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  shippingAddress String
+  paymentMethod   String      @default("Cash on Delivery")
 
-    items OrderItem[]
+  items OrderItem[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@index([customerId, status, createdAt])
+  @@index([customerId, status, createdAt])
 }
 
 model OrderItem {
-    id String @id @default(uuid())
+  id String @id @default(uuid())
 
-    orderId String
-    order   Order  @relation(fields: [orderId], references: [id])
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
 
-    medicineId String
-    medicine   Medicine @relation(fields: [medicineId], references: [id])
+  medicineId String
+  medicine   Medicine @relation(fields: [medicineId], references: [id])
 
-    quantity Int
-    price    Float
+  quantity Int
+  price    Float
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@index([orderId, medicineId])
+  @@index([orderId, medicineId])
 }
 
 model Review {
-    id String @id @default(uuid())
+  id String @id @default(uuid())
 
-    rating  Int
-    comment String?
+  rating  Int
+  comment String?
 
-    // userId String
-    // user   User   @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-    medicineId String
-    medicine   Medicine @relation(fields: [medicineId], references: [id])
+  medicineId String
+  medicine   Medicine @relation(fields: [medicineId], references: [id])
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@index([medicineId])
+  @@index([medicineId])
 }
-
-
-// generator client {
-//   provider = "prisma-client-js"
-//   output   = "../generated/prisma"
-// }
-
-// datasource db {
-//   provider = "postgresql"
-// }
-
-// // Enums
-// enum Role {
-//   CUSTOMER
-//   SELLER
-//   ADMIN
-// }
-
-// enum OrderStatus {
-//   PENDING
-//   CONFIRMED
-//   SHIPPED
-//   DELIVERED
-//   CANCELLED
-// }
-
-// // Models
-// model Category {
-//   id          String   @id @default(uuid())
-//   name        String   @unique
-//   description String?
-//   medicines   Medicine[]
-
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model Medicine {
-//   id           String     @id @default(uuid())
-//   name         String
-//   description  String
-//   price        Float
-//   stock        Int
-//   manufacturer String
-//   imageUrl     String?
-//   isDeleted    Boolean    @default(false)
-
-//   sellerId    String
-//   categoryId  String
-//   category    Category   @relation(fields: [categoryId], references: [id])
-
-//   orderItems  OrderItem[]
-//   reviews     Review[]
-
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-
-//   @@index([sellerId, categoryId, price, name])
-// }
-
-// model Order {
-//   id              String      @id @default(uuid())
-//   customerId      String
-//   status          OrderStatus @default(PENDING)
-//   totalAmount     Float
-//   shippingAddress String
-//   paymentMethod   String      @default("Cash on Delivery")
-
-//   items OrderItem[]
-
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-
-//   @@index([customerId, status, createdAt])
-// }
-
-// model OrderItem {
-//   id         String   @id @default(uuid())
-//   orderId    String
-//   order      Order    @relation(fields: [orderId], references: [id])
-//   medicineId String
-//   medicine   Medicine @relation(fields: [medicineId], references: [id])
-//   quantity   Int
-//   price      Float
-
-//   createdAt DateTime @default(now())
-
-//   @@index([orderId, medicineId])
-// }
-
-// model Review {
-//   id         String   @id @default(uuid())
-//   rating     Int
-//   comment    String?
-//   medicineId String
-//   medicine   Medicine @relation(fields: [medicineId], references: [id])
-
-//   createdAt DateTime @default(now())
-
-//   @@index([medicineId])
-// }
