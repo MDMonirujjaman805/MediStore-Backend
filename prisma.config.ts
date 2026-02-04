@@ -13,7 +13,6 @@ export default defineConfig({
   },
 });
 
-
 // import { PrismaPg } from "@prisma/adapter-pg";
 // import "dotenv/config";
 
@@ -22,7 +21,6 @@ export default defineConfig({
 //     connectionString: process.env.DATABASE_URL!,
 //   }),
 // };
-
 
 // import { PrismaClient } from "../../generated/prisma"; // path to generated client
 // import { prismaConfig } from "../../prisma/prisma.config";

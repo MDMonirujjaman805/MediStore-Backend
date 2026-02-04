@@ -7,17 +7,18 @@ import { orderRouter } from "./orders/order.route";
 
 const app: Application = express();
 
+
 app.use(
   cors({
     origin: process.env.APP_URL || "http://localhost:3000",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
-
 app.use(express.json());
-
+app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use("/api/v1/orders", orderRouter.router);
 app.use("/api/v1/shop", shopRouter.router);
 
