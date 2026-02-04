@@ -4,9 +4,9 @@ import express, { Application } from "express";
 import { shopRouter } from "./shop/shop.route";
 import { toNodeHandler } from "better-auth/node";
 import { orderRouter } from "./orders/order.route";
+import { AuthRoutes } from "./modules/auth/auth.routes";
 
 const app: Application = express();
-
 
 app.use(
   cors({
@@ -21,7 +21,7 @@ app.use(express.json());
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use("/api/v1/orders", orderRouter.router);
 app.use("/api/v1/shop", shopRouter.router);
-
+app.use("/api/v1/auth", AuthRoutes);
 app.get("/", (req, res) => {
   res.send("Hello World! This is MediStore Website.");
 });

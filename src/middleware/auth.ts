@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { auth as betterAuth } from "../lib/auth";
-import { prisma } from "../lib/prisma"; // 👈 prisma import করো
+import { prisma } from "../lib/prisma";
 
 export enum AuthRole {
   CUSTOMER = "CUSTOMER",
